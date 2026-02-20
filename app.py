@@ -5,6 +5,7 @@ Daily autonomous scanning for market opportunities across AI/tech, local busines
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
+import traceback
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -56,6 +57,9 @@ def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('authenticated'):
+            # Return JSON for API routes, redirect for pages
+            if request.path.startswith('/api/'):
+                return jsonify({'status': 'error', 'message': 'Not authenticated'}), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
@@ -117,6 +121,7 @@ def api_scan():
         result = orchestrator.run_daily_scan()
         return jsonify(result)
     except Exception as e:
+        print(f"[API] Scan error: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
