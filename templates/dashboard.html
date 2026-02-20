@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0a1e;
+            color: #e2e0ff;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d2654;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 20px; }
+        .header .subtitle { color: #8b85b1; font-size: 13px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-ghost { background: transparent; color: #8b85b1; border: 1px solid #2d2654; }
+        .btn-danger { background: #dc2626; color: white; }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 0;
+            padding: 0 32px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            flex: 1;
+            background: #1a1530;
+            border: 1px solid #2d2654;
+            padding: 16px 20px;
+            text-align: center;
+        }
+        .stat-card:first-child { border-radius: 10px 0 0 10px; }
+        .stat-card:last-child { border-radius: 0 10px 10px 0; }
+        .stat-card:not(:last-child) { border-right: none; }
+        .stat-number { font-size: 28px; font-weight: 700; color: #a5b4fc; }
+        .stat-label { font-size: 12px; color: #8b85b1; margin-top: 2px; }
+
+        /* Filters */
+        .filters {
+            padding: 16px 32px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #2d2654;
+            background: transparent;
+            color: #8b85b1;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        /* Opportunities grid */
+        .opp-grid {
+            padding: 0 32px 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+        .opp-card {
+            background: #1a1530;
+            border: 1px solid #2d2654;
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .opp-card:hover { border-color: #4f46e5; }
+        .opp-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .domain-badge {
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .domain-ai_tech { background: #312e81; color: #a5b4fc; }
+        .domain-local_business { background: #064e3b; color: #6ee7b7; }
+        .domain-digital_product { background: #78350f; color: #fcd34d; }
+        .domain-unknown { background: #1f2937; color: #9ca3af; }
+        .score {
+            font-family: monospace;
+            font-size: 14px;
+            color: #a5b4fc;
+        }
+        .opp-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        .opp-desc {
+            font-size: 14px;
+            color: #8b85b1;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .opp-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #6b6490;
+        }
+        .opp-tags span {
+            background: #1e1b4b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        .opp-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #2d2654;
+        }
+        .opp-actions .btn { font-size: 12px; padding: 5px 12px; }
+
+        /* Status message */
+        .status-msg {
+            text-align: center;
+            padding: 40px;
+            color: #6b6490;
+        }
+
+        /* Scan running */
+        .scan-running {
+            background: #1e1b4b;
+            border: 1px solid #4f46e5;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid #4f46e5;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header { padding: 16px; }
+            .stats-bar, .filters, .opp-grid { padding-left: 16px; padding-right: 16px; }
+            .opp-grid { grid-template-columns: 1fr; }
+            .stats-bar { flex-wrap: wrap; }
+            .stat-card { min-width: 45%; border-radius: 8px !important; border: 1px solid #2d2654 !important; margin: 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <span style="font-size:28px;">🔭</span>
+            <div>
+                <h1>Scout Dashboard</h1>
+                <span class="subtitle">Last scan: {{ stats.last_scan }}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="triggerScan()" id="scanBtn">Run Scan Now</button>
+            <a href="/logout" class="btn btn-ghost">Logout</a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.new }}</div>
+            <div class="stat-label">New</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.bookmarked }}</div>
+            <div class="stat-label">Bookmarked</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Total Found</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.scans }}</div>
+            <div class="stat-label">Scans Run</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <button class="filter-btn active" onclick="filterDomain('all')">All</button>
+        <button class="filter-btn" onclick="filterDomain('ai_tech')">AI / Tech</button>
+        <button class="filter-btn" onclick="filterDomain('local_business')">Local Business</button>
+        <button class="filter-btn" onclick="filterDomain('digital_product')">Digital Products</button>
+        <button class="filter-btn" onclick="filterDomain('bookmarked')">Bookmarked</button>
+    </div>
+
+    <div id="scanStatus"></div>
+
+    <!-- Opportunities -->
+    <div class="opp-grid" id="oppGrid">
+        {% if opportunities %}
+            {% for opp in opportunities %}
+            <div class="opp-card" data-domain="{{ opp.domain }}">
+                <div class="opp-card-header">
+                    <span class="domain-badge domain-{{ opp.domain }}">
+                        {% if opp.domain == 'ai_tech' %}AI / Tech{% elif opp.domain == 'local_business' %}Local Biz{% elif opp.domain == 'digital_product' %}Digital{% else %}{{ opp.domain }}{% endif %}
+                    </span>
+                    <span class="score">{{ '%.1f'|format(opp.score) }}/10</span>
+                </div>
+                <div class="opp-title">{{ opp.title }}</div>
+                <div class="opp-desc">{{ opp.description }}</div>
+                <div class="opp-meta">
+                    <div class="opp-tags">
+                        {% for tag in opp.tags.split(',')[:3] %}
+                            {% if tag.strip() %}<span>{{ tag.strip() }}</span>{% endif %}
+                        {% endfor %}
+                    </div>
+                    <span>{{ opp.source }} · {{ opp.found_date[:10] }}</span>
+                </div>
+                <div class="opp-actions">
+                    {% if opp.url %}
+                    <a href="{{ opp.url }}" target="_blank" class="btn btn-ghost" style="font-size:12px;">View Source</a>
+                    {% endif %}
+                    {% if opp.status != 'bookmarked' %}
+                    <button class="btn btn-primary" onclick="bookmark({{ opp.id }})" style="font-size:12px;">Bookmark</button>
+                    {% endif %}
+                    <button class="btn btn-ghost" onclick="dismiss({{ opp.id }})" style="font-size:12px; color:#ef4444; border-color:#4a1c1c;">Dismiss</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="status-msg" style="grid-column:1/-1;">
+                <p style="font-size:48px; margin-bottom:12px;">🔭</p>
+                <p style="font-size:18px; color:#8b85b1;">No opportunities found yet.</p>
+                <p style="margin-top:8px;">Click "Run Scan Now" to start your first scan.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function triggerScan() {
+            const btn = document.getElementById('scanBtn');
+            btn.textContent = 'Scanning...';
+            btn.disabled = true;
+            document.getElementById('scanStatus').innerHTML = `
+                <div class="scan-running">
+                    <div class="spinner"></div>
+                    <span>Scanning sources and analyzing opportunities... This may take 1-2 minutes.</span>
+                </div>`;
+
+            fetch('/api/scan', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    btn.textContent = 'Run Scan Now';
+                    btn.disabled = false;
+                    document.getElementById('scanStatus').innerHTML = '';
+                    if (data.status === 'complete') {
+                        location.reload();
+                    } else {
+                        alert('Scan completed but no new data: ' + JSON.stringify(data));
+                    }
+                })
+                .catch(err => {
+                    btn.textContent = 'Run Scan Now';
+                    btn.disabled = false;
+                    document.getElementById('scanStatus').innerHTML = '';
+                    alert('Scan error: ' + err);
+                });
+        }
+
+        function dismiss(id) {
+            fetch('/api/dismiss/' + id, { method: 'POST' })
+                .then(r => r.json())
+                .then(() => location.reload());
+        }
+
+        function bookmark(id) {
+            fetch('/api/bookmark/' + id, { method: 'POST' })
+                .then(r => r.json())
+                .then(() => location.reload());
+        }
+
+        function filterDomain(domain) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (domain === 'bookmarked') {
+                window.location.href = '/dashboard?filter=bookmarked';
+                return;
+            }
+
+            document.querySelectorAll('.opp-card').forEach(card => {
+                if (domain === 'all' || card.dataset.domain === domain) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
