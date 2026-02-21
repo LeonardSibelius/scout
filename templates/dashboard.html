@@ -116,6 +116,10 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        .domain-agent_tools { background: #312e81; color: #a5b4fc; }
+        .domain-agent_services { background: #064e3b; color: #6ee7b7; }
+        .domain-agent_infra { background: #78350f; color: #fcd34d; }
+        .domain-agent_products { background: #831843; color: #f9a8d4; }
         .domain-ai_tech { background: #312e81; color: #a5b4fc; }
         .domain-local_business { background: #064e3b; color: #6ee7b7; }
         .domain-digital_product { background: #78350f; color: #fcd34d; }
@@ -234,9 +238,10 @@
     <!-- Filters -->
     <div class="filters">
         <button class="filter-btn active" onclick="filterDomain('all')">All</button>
-        <button class="filter-btn" onclick="filterDomain('ai_tech')">AI / Tech</button>
-        <button class="filter-btn" onclick="filterDomain('local_business')">Local Business</button>
-        <button class="filter-btn" onclick="filterDomain('digital_product')">Digital Products</button>
+        <button class="filter-btn" onclick="filterDomain('agent_tools')">Agent Tools</button>
+        <button class="filter-btn" onclick="filterDomain('agent_services')">Agent Services</button>
+        <button class="filter-btn" onclick="filterDomain('agent_infra')">Agent Infra</button>
+        <button class="filter-btn" onclick="filterDomain('agent_products')">Agent Products</button>
         <button class="filter-btn" onclick="filterDomain('bookmarked')">Bookmarked</button>
     </div>
 
@@ -249,7 +254,7 @@
             <div class="opp-card" data-domain="{{ opp.domain }}">
                 <div class="opp-card-header">
                     <span class="domain-badge domain-{{ opp.domain }}">
-                        {% if opp.domain == 'ai_tech' %}AI / Tech{% elif opp.domain == 'local_business' %}Local Biz{% elif opp.domain == 'digital_product' %}Digital{% else %}{{ opp.domain }}{% endif %}
+                        {% if opp.domain == 'agent_tools' %}Agent Tools{% elif opp.domain == 'agent_services' %}Agent Services{% elif opp.domain == 'agent_infra' %}Agent Infra{% elif opp.domain == 'agent_products' %}Agent Products{% elif opp.domain == 'ai_tech' %}AI / Tech{% elif opp.domain == 'local_business' %}Local Biz{% elif opp.domain == 'digital_product' %}Digital{% else %}{{ opp.domain }}{% endif %}
                     </span>
                     <span class="score">{{ '%.1f'|format(opp.score) }}/10</span>
                 </div>

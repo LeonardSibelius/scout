@@ -35,8 +35,13 @@ class ScraperAgent(BaseAgent):
             'product_hunt': 'https://www.producthunt.com/feed',
             'hacker_news_best': 'https://hnrss.org/best',
             'hacker_news_show': 'https://hnrss.org/show',
+            'hn_ai_agents': 'https://hnrss.org/newest?q=AI+agent+OR+MCP+OR+agentic+OR+browser+agent',
         }
-        self.reddit_subs = ['SaaS', 'smallbusiness', 'Entrepreneur', 'LocalLLaMA', 'artificial']
+        self.reddit_subs = [
+            'SaaS', 'Entrepreneur', 'LocalLLaMA', 'artificial',
+            'ClaudeAI', 'ChatGPTPro', 'AutoGPT', 'AI_Agents',
+            'MachineLearning', 'webdev', 'selfhosted'
+        ]
 
     def get_system_prompt(self) -> str:
         return "You are a data collection agent. Your job is to gather raw items from various sources."

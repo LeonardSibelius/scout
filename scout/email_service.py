@@ -58,12 +58,20 @@ def _build_digest_html(opportunities: List[Dict]) -> str:
     date_str = datetime.now().strftime('%A, %B %d, %Y')
 
     domain_colors = {
+        'agent_tools': '#6366f1',
+        'agent_services': '#10b981',
+        'agent_infra': '#f59e0b',
+        'agent_products': '#ec4899',
         'ai_tech': '#6366f1',
         'local_business': '#10b981',
         'digital_product': '#f59e0b',
     }
 
     domain_labels = {
+        'agent_tools': 'Agent Tools',
+        'agent_services': 'Agent Services',
+        'agent_infra': 'Agent Infra',
+        'agent_products': 'Agent Products',
         'ai_tech': 'AI / Tech',
         'local_business': 'Local Business',
         'digital_product': 'Digital Product',
