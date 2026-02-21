@@ -1,11 +1,12 @@
 """
 Scout Intelligence Agent — Engine Room AI
-Daily autonomous scanning for market opportunities across AI/tech, local business, and digital products.
+Daily autonomous scanning for agentic web opportunities.
 """
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 import traceback
+import threading
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -26,16 +27,47 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD', 'scout2024')
 
+# Track scan status in memory
+scan_status = {
+    'running': False,
+    'last_result': None,
+    'last_error': None,
+    'started_at': None,
+    'finished_at': None,
+}
+scan_lock = threading.Lock()
+
+
+def run_scan_background():
+    """Run scan in background thread."""
+    global scan_status
+    try:
+        orchestrator = ScoutOrchestrator()
+        result = orchestrator.run_daily_scan()
+        with scan_lock:
+            scan_status['running'] = False
+            scan_status['last_result'] = result
+            scan_status['last_error'] = None
+            scan_status['finished_at'] = datetime.now().isoformat()
+        print(f"[Scan] Complete: {result}")
+    except Exception as e:
+        with scan_lock:
+            scan_status['running'] = False
+            scan_status['last_error'] = str(e)
+            scan_status['finished_at'] = datetime.now().isoformat()
+        print(f"[Scan] Error: {traceback.format_exc()}")
+
 
 def scheduled_scan():
     """Run the daily scan (called by APScheduler)."""
     print(f"[Scheduler] Starting scheduled scan at {datetime.now()}")
-    try:
-        orchestrator = ScoutOrchestrator()
-        result = orchestrator.run_daily_scan()
-        print(f"[Scheduler] Scan complete: {result}")
-    except Exception as e:
-        print(f"[Scheduler] Scan failed: {e}")
+    with scan_lock:
+        if scan_status['running']:
+            print("[Scheduler] Scan already running, skipping")
+            return
+        scan_status['running'] = True
+        scan_status['started_at'] = datetime.now().isoformat()
+    run_scan_background()
 
 
 # Set up scheduler
@@ -57,7 +89,6 @@ def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('authenticated'):
-            # Return JSON for API routes, redirect for pages
             if request.path.startswith('/api/'):
                 return jsonify({'status': 'error', 'message': 'Not authenticated'}), 401
             return redirect(url_for('login'))
@@ -88,7 +119,6 @@ def logout():
 
 @app.route('/')
 def index():
-    """Redirect to dashboard if logged in, otherwise login."""
     if session.get('authenticated'):
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
@@ -115,14 +145,35 @@ def dashboard():
 @app.route('/api/scan', methods=['POST'])
 @login_required
 def api_scan():
-    """Trigger a manual scan."""
-    try:
-        orchestrator = ScoutOrchestrator()
-        result = orchestrator.run_daily_scan()
-        return jsonify(result)
-    except Exception as e:
-        print(f"[API] Scan error: {traceback.format_exc()}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    """Kick off scan in background thread, return immediately."""
+    global scan_status
+    with scan_lock:
+        if scan_status['running']:
+            return jsonify({'status': 'already_running', 'message': 'Scan is already in progress', 'started_at': scan_status['started_at']})
+        scan_status['running'] = True
+        scan_status['started_at'] = datetime.now().isoformat()
+        scan_status['last_result'] = None
+        scan_status['last_error'] = None
+        scan_status['finished_at'] = None
+
+    thread = threading.Thread(target=run_scan_background, daemon=True)
+    thread.start()
+
+    return jsonify({'status': 'started', 'message': 'Scan started in background. Check /api/scan/status for progress.'})
+
+
+@app.route('/api/scan/status')
+@login_required
+def api_scan_status():
+    """Check if a scan is running and get results."""
+    with scan_lock:
+        return jsonify({
+            'running': scan_status['running'],
+            'started_at': scan_status['started_at'],
+            'finished_at': scan_status['finished_at'],
+            'result': scan_status['last_result'],
+            'error': scan_status['last_error'],
+        })
 
 
 @app.route('/api/dismiss/<int:opp_id>', methods=['POST'])
@@ -166,8 +217,9 @@ def health():
     return jsonify({
         'status': 'ok',
         'service': 'scout',
-        'version': '1.0',
+        'version': '1.1',
         'scheduler_running': scheduler.running,
+        'scan_running': scan_status['running'],
         'next_scan': str(scheduler.get_job('daily_scan').next_run_time) if scheduler.get_job('daily_scan') else 'not scheduled'
     })
 
